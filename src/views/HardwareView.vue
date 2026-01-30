@@ -63,27 +63,41 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import HardwareStats from '@/components/HardwareStats.vue';
 import { useMinecraftStore } from '@/stores/minecraft';
-const minecraftStore = useMinecraftStore(); // Asumiendo que tienes un store para hardware
 
-const hardwareStore = useHardwareStore();
+const minecraftStore = useMinecraftStore();
 
 // Lógica para etiquetas de temperatura
 const tempStatus = computed(() => {
-  const temp = hardwareStore.stats?.temperature || 0;
+  const temp = minecraftStore.hardware.temperature?.celsius || 0;
   if (temp < 60) return 'Estable';
   if (temp < 75) return 'Templada';
   return 'Crítica';
 });
 
 const tempClass = computed(() => {
-  const temp = hardwareStore.stats?.temperature || 0;
+  const temp = minecraftStore.hardware.temperature?.celsius || 0;
   if (temp < 60) return 'text-green-400 bg-green-400/10';
   if (temp < 75) return 'text-yellow-400 bg-yellow-400/10';
   return 'text-red-400 bg-red-400/10';
 });
 
-const systemUptime = computed(() => hardwareStore.stats?.uptime_system || '0d 0h 0m');
+const systemUptime = computed(() => 
+  minecraftStore.hardware.resources?.uptime?.formatted || '0d 0h 0m'
+);
+
+let refreshInterval = null;
+
+onMounted(() => {
+  minecraftStore.fetchHardware();
+  refreshInterval = setInterval(() => {
+    minecraftStore.fetchHardware();
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (refreshInterval) clearInterval(refreshInterval);
+});
 </script>

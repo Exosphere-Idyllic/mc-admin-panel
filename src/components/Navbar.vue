@@ -68,7 +68,9 @@ const router = useRouter()
 const authStore = useAuthStore()
 const mcStore = useMinecraftStore()
 
-const serverActive = computed(() => mcStore.status?.active)
+const serverActive = computed(() => {
+  return mcStore.serverStatus?.minecraft?.active || false
+})
 
 const logout = () => {
   authStore.logout()

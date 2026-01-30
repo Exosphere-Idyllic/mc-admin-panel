@@ -15,14 +15,16 @@ export const useMinecraftStore = defineStore('minecraft', () => {
     uptime_system: '0d 0h 0m'
   })
   const uptime = ref({
-    seconds: 0,
-    formatted: '0d 0h 0m'
+  uptime_seconds: 0,
+  uptime_formatted: '0d 0h 0m'
   })
   const loading = ref(false)
   const error = ref(null)
 
   // --- GETTERS ---
   const isServerOnline = computed(() => serverStatus.value.minecraft.active)
+
+  const status = computed(() => serverStatus.value.minecraft)
   
   const playerCount = computed(() => players.value.online)
 
@@ -68,17 +70,17 @@ export const useMinecraftStore = defineStore('minecraft', () => {
   }
 
   async function fetchUptime() {
-    if (!isServerOnline.value) {
-      uptime.value = { seconds: 0, formatted: '0d 0h 0m' }
-      return
+  if (!isServerOnline.value) {
+    uptime.value = { uptime_seconds: 0, uptime_formatted: '0d 0h 0m' }
+    return
+  }
+  try {
+    const response = await systemAPI.getMinecraftUptime()
+    // Nos aseguramos de guardar los segundos como número para el ticker del componente
+    uptime.value = {
+      uptime_seconds: parseInt(response.data.uptime_seconds) || 0,
+      uptime_formatted: response.data.uptime_formatted || '0d 0h 0m'
     }
-    try {
-      const response = await systemAPI.getMinecraftUptime()
-      // Nos aseguramos de guardar los segundos como número para el ticker del componente
-      uptime.value = {
-        seconds: parseInt(response.data.seconds) || 0,
-        formatted: response.data.formatted || '0d 0h 0m'
-      }
     } catch (err) {
       console.error('Uptime fetch error:', err)
     }
@@ -154,11 +156,11 @@ export const useMinecraftStore = defineStore('minecraft', () => {
     }
   }
 
-  return {
-    players, serverStatus, hardware, uptime, loading, error,
-    isServerOnline, playerCount, stats,
-    fetchPlayers, fetchServerStatus, fetchHardware, fetchUptime,
-    startServer, stopServer, restartServer, executeCommand,
-    startAutoRefresh, stopAutoRefresh
-  }
+return {
+  players, serverStatus, hardware, uptime, loading, error,
+  isServerOnline, playerCount, stats, status,  // <- agregar status aquí
+  fetchPlayers, fetchServerStatus, fetchHardware, fetchUptime,
+  startServer, stopServer, restartServer, executeCommand,
+  startAutoRefresh, stopAutoRefresh
+}
 })

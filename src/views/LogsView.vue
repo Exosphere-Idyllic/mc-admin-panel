@@ -81,9 +81,24 @@ const formattedLogs = computed(() => {
 const fetchLogs = async () => {
   loading.value = true;
   try {
-    // Ajustado al endpoint de tu API según lo conversado
-    const response = await axios.get(`/api/system/minecraft/logs?lines=${lines.value}`);
-    logs.value = response.data.logs || response.data; // Maneja string directo o objeto
+    const response = await axios.get(`/system/minecraft/logs?lines=${lines.value}`);
+    
+    // Manejar diferentes formatos de respuesta
+    if (response.data.logs) {
+      // Si viene como objeto con propiedad logs
+      logs.value = Array.isArray(response.data.logs) 
+        ? response.data.logs.join('\n') 
+        : response.data.logs;
+    } else if (Array.isArray(response.data)) {
+      // Si viene como array directo
+      logs.value = response.data.join('\n');
+    } else if (typeof response.data === 'string') {
+      // Si viene como string directo
+      logs.value = response.data;
+    } else {
+      logs.value = '';
+      console.error('Formato de logs no reconocido:', response.data);
+    }
     
     // Auto-scroll al final después de actualizar
     await nextTick();
@@ -92,6 +107,7 @@ const fetchLogs = async () => {
     }
   } catch (error) {
     console.error("Error cargando logs:", error);
+    logs.value = `Error al cargar logs: ${error.message}`;
   } finally {
     loading.value = false;
   }

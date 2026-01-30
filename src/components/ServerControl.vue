@@ -91,9 +91,19 @@ const formatDuration = (totalSeconds) => {
 }
 
 // Uptime calculado combinando el valor del API + el contador local
+import { watch } from 'vue' // Agregar watch al import
+
 const liveUptime = computed(() => {
-  const baseSeconds = minecraftStore.uptime?.seconds || 0
+  const baseSeconds = minecraftStore.uptime?.uptime_seconds || 0
   return formatDuration(baseSeconds + liveSeconds.value)
+})
+
+// Agregar después de startTimer():
+watch(() => minecraftStore.uptime?.uptime_seconds, (newVal) => {
+  // Resetear contador local cuando el uptime base cambie
+  if (newVal !== undefined) {
+    liveSeconds.value = 0
+  }
 })
 
 // Iniciar contador local para que el tiempo avance sin refrescar API
