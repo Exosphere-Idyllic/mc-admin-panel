@@ -17,6 +17,25 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/hardware',
+    name: 'Hardware',
+    // Carga perezosa: el componente se busca cuando el usuario hace clic
+    component: () => import('@/views/HardwareView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/console',
+    name: 'Console',
+    component: () => import('@/views/ConsoleView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/logs',
+    name: 'Logs',
+    component: () => import('@/views/LogsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }
@@ -30,13 +49,17 @@ const router = createRouter({
 // Guard de navegación
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  const requiresAuth = to.meta.requiresAuth
+  const isAuthenticated = authStore.isAuthenticated
 
-  if (requiresAuth && !authStore.isAuthenticated) {
+  // Verificamos si la ruta requiere autenticación
+  if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
-  } else if (to.path === '/login' && authStore.isAuthenticated) {
+  } 
+  // Si ya está logueado y trata de ir al login, al dashboard
+  else if (to.path === '/login' && isAuthenticated) {
     next('/')
-  } else {
+  } 
+  else {
     next()
   }
 })
