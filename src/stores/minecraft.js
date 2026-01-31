@@ -15,8 +15,8 @@ export const useMinecraftStore = defineStore('minecraft', () => {
     uptime_system: '0d 0h 0m'
   })
   const uptime = ref({
-  uptime_seconds: 0,
-  uptime_formatted: '0d 0h 0m'
+    uptime_seconds: 0,
+    uptime_formatted: '0d 0h 0m'
   })
   const loading = ref(false)
   const error = ref(null)
@@ -70,17 +70,16 @@ export const useMinecraftStore = defineStore('minecraft', () => {
   }
 
   async function fetchUptime() {
-  if (!isServerOnline.value) {
-    uptime.value = { uptime_seconds: 0, uptime_formatted: '0d 0h 0m' }
-    return
-  }
-  try {
-    const response = await systemAPI.getMinecraftUptime()
-    // Nos aseguramos de guardar los segundos como número para el ticker del componente
-    uptime.value = {
-      uptime_seconds: parseInt(response.data.uptime_seconds) || 0,
-      uptime_formatted: response.data.uptime_formatted || '0d 0h 0m'
+    if (!isServerOnline.value) {
+      uptime.value = { uptime_seconds: 0, uptime_formatted: '0d 0h 0m' }
+      return
     }
+    try {
+      const response = await systemAPI.getMinecraftUptime()
+      uptime.value = {
+        uptime_seconds: parseInt(response.data.uptime_seconds) || 0,
+        uptime_formatted: response.data.uptime_formatted || '0d 0h 0m'
+      }
     } catch (err) {
       console.error('Uptime fetch error:', err)
     }
@@ -88,7 +87,8 @@ export const useMinecraftStore = defineStore('minecraft', () => {
 
   // Controladores de Servidor
   async function startServer() {
-    loading.value = true; error.value = null
+    loading.value = true
+    error.value = null
     try {
       await systemAPI.startMinecraft()
       await fetchServerStatus()
@@ -96,24 +96,30 @@ export const useMinecraftStore = defineStore('minecraft', () => {
     } catch (err) {
       error.value = err.response?.data?.detail || 'Error al iniciar'
       return false
-    } finally { loading.value = false }
+    } finally { 
+      loading.value = false 
+    }
   }
 
   async function stopServer() {
-    loading.value = true; error.value = null
+    loading.value = true
+    error.value = null
     try {
       await systemAPI.stopMinecraft()
       await fetchServerStatus()
-      uptime.value = { seconds: 0, formatted: '0d 0h 0m' }
+      uptime.value = { uptime_seconds: 0, uptime_formatted: '0d 0h 0m' }
       return true
     } catch (err) {
       error.value = err.response?.data?.detail || 'Error al detener'
       return false
-    } finally { loading.value = false }
+    } finally { 
+      loading.value = false 
+    }
   }
 
   async function restartServer() {
-    loading.value = true; error.value = null
+    loading.value = true
+    error.value = null
     try {
       await systemAPI.restartMinecraft()
       await fetchServerStatus()
@@ -121,16 +127,30 @@ export const useMinecraftStore = defineStore('minecraft', () => {
     } catch (err) {
       error.value = err.response?.data?.detail || 'Error al reiniciar'
       return false
-    } finally { loading.value = false }
+    } finally { 
+      loading.value = false 
+    }
   }
 
-  async function executeCommand(command) {
+  // ⭐ MÉTODO CORREGIDO - sendCommand
+  async function sendCommand(command) {
     try {
       const response = await minecraftAPI.sendCommand(command)
-      return response.data
+      return {
+        success: true,
+        data: response.data
+      }
     } catch (err) {
-      throw err.response?.data?.detail || 'Error RCON'
+      return {
+        success: false,
+        error: err.response?.data?.detail || err.message || 'Error al ejecutar comando'
+      }
     }
+  }
+
+  // Alias para mantener compatibilidad
+  async function executeCommand(command) {
+    return sendCommand(command)
   }
 
   // --- REFRESH LOGIC ---
@@ -140,12 +160,11 @@ export const useMinecraftStore = defineStore('minecraft', () => {
     stopAutoRefresh()
     refreshInterval = setInterval(async () => {
       await fetchServerStatus()
-      // Solo pedimos datos pesados si el servidor está ON
       if (isServerOnline.value) {
         fetchPlayers()
         fetchUptime()
       }
-      fetchHardware() // El hardware se pide siempre (estado de la Pi)
+      fetchHardware()
     }, interval)
   }
 
@@ -156,11 +175,32 @@ export const useMinecraftStore = defineStore('minecraft', () => {
     }
   }
 
-return {
-  players, serverStatus, hardware, uptime, loading, error,
-  isServerOnline, playerCount, stats, status,  // <- agregar status aquí
-  fetchPlayers, fetchServerStatus, fetchHardware, fetchUptime,
-  startServer, stopServer, restartServer, executeCommand,
-  startAutoRefresh, stopAutoRefresh
-}
+  return {
+    // State
+    players, 
+    serverStatus, 
+    hardware, 
+    uptime, 
+    loading, 
+    error,
+    
+    // Getters
+    isServerOnline, 
+    playerCount, 
+    stats, 
+    status,
+    
+    // Actions
+    fetchPlayers, 
+    fetchServerStatus, 
+    fetchHardware, 
+    fetchUptime,
+    startServer, 
+    stopServer, 
+    restartServer, 
+    sendCommand,        
+    executeCommand,     
+    startAutoRefresh, 
+    stopAutoRefresh
+  }
 })

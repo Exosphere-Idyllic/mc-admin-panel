@@ -1,70 +1,75 @@
 <template>
-  <div class="p-6 max-w-[1600px] mx-auto">
-    <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-      <div>
-        <h2 class="text-3xl font-black text-white tracking-tight">Logs del <span class="text-green-500">Sistema</span></h2>
-        <p class="text-slate-400 font-medium">Registro de eventos de mc-admin-api y Minecraft</p>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <select 
-          v-model="lines" 
-          @change="fetchLogs"
-          class="bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-green-500"
-        >
-          <option :value="50">50 líneas</option>
-          <option :value="100">100 líneas</option>
-          <option :value="500">500 líneas</option>
-        </select>
-
-        <button 
-          @click="toggleAutoRefresh"
-          :class="[
-            'px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all border',
-            autoRefresh ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-slate-800 border-slate-700 text-slate-500'
-          ]"
-        >
-          {{ autoRefresh ? 'Auto-sync ON' : 'Auto-sync OFF' }}
-        </button>
-
-        <button @click="fetchLogs" class="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="relative group">
-      <div 
-        ref="logContainer"
-        class="bg-slate-900 border border-slate-700 rounded-2xl p-6 h-[600px] overflow-y-auto font-mono text-sm scrollbar-thin scrollbar-thumb-slate-700"
-      >
-        <div v-if="loading && !logs" class="flex items-center justify-center h-full">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+  <div class="min-h-screen bg-slate-900">
+    <Navbar />
+    
+    <div class="p-6 max-w-[1600px] mx-auto">
+      <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 class="text-3xl font-black text-white tracking-tight">Logs del <span class="text-green-500">Sistema</span></h2>
+          <p class="text-slate-400 font-medium">Registro de eventos de mc-admin-api y Minecraft</p>
         </div>
 
-        <div v-else-if="logs" class="space-y-1">
-          <div v-for="(line, index) in formattedLogs" :key="index" class="hover:bg-slate-800/50 rounded px-2 py-0.5 transition-colors">
-            <span class="text-slate-600 mr-3 select-none text-[10px]">{{ index + 1 }}</span>
-            <span :class="getLineColor(line)">{{ line }}</span>
+        <div class="flex items-center gap-3">
+          <select 
+            v-model="lines" 
+            @change="fetchLogs"
+            class="bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-green-500"
+          >
+            <option :value="50">50 líneas</option>
+            <option :value="100">100 líneas</option>
+            <option :value="500">500 líneas</option>
+          </select>
+
+          <button 
+            @click="toggleAutoRefresh"
+            :class="[
+              'px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all border',
+              autoRefresh ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-slate-800 border-slate-700 text-slate-500'
+            ]"
+          >
+            {{ autoRefresh ? 'Auto-sync ON' : 'Auto-sync OFF' }}
+          </button>
+
+          <button @click="fetchLogs" class="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="relative group">
+        <div 
+          ref="logContainer"
+          class="bg-slate-900 border border-slate-700 rounded-2xl p-6 h-[600px] overflow-y-auto font-mono text-sm scrollbar-thin scrollbar-thumb-slate-700"
+        >
+          <div v-if="loading && !logs" class="flex items-center justify-center h-full">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+          </div>
+
+          <div v-else-if="logs" class="space-y-1">
+            <div v-for="(line, index) in formattedLogs" :key="index" class="hover:bg-slate-800/50 rounded px-2 py-0.5 transition-colors">
+              <span class="text-slate-600 mr-3 select-none text-[10px]">{{ index + 1 }}</span>
+              <span :class="getLineColor(line)">{{ line }}</span>
+            </div>
+          </div>
+
+          <div v-else class="text-slate-500 text-center mt-20">
+            No hay registros disponibles o el servidor no responde.
           </div>
         </div>
 
-        <div v-else class="text-slate-500 text-center mt-20">
-          No hay registros disponibles o el servidor no responde.
+        <div class="absolute bottom-4 right-8 px-3 py-1 bg-slate-800/80 backdrop-blur border border-slate-600 rounded text-[10px] text-slate-400 font-bold uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
+          Live Feed
         </div>
-      </div>
-
-      <div class="absolute bottom-4 right-8 px-3 py-1 bg-slate-800/80 backdrop-blur border border-slate-600 rounded text-[10px] text-slate-400 font-bold uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
-        Live Feed
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import Navbar from '@/components/Navbar.vue';
 import axios from '@/api/axios';
 
 const logs = ref('');
